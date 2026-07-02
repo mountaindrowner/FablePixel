@@ -5,6 +5,7 @@ import { buildSilhouette } from "./silhouette";
 import { placeFeatures } from "./features";
 import { drawHero, HERO_DEFAULT_HUE } from "./hero";
 import { drawKnight, KNIGHT_DEFAULT_HUE } from "./knight";
+import { drawBarbarian } from "./barbarian";
 
 function requestedPlan(params: StageContext["params"]): string | undefined {
   const p = params.categoryParams?.["plan"];
@@ -32,6 +33,9 @@ export const characterGenerator: SpriteGenerator = {
     }
     if (requested === "knight") {
       return drawKnight(params.width, params.height, ctx.rng.fork("silhouette"));
+    }
+    if (requested === "barbarian") {
+      return drawBarbarian(params.width, params.height, ctx.rng.fork("silhouette"));
     }
 
     const planRng = ctx.rng.fork("plan");

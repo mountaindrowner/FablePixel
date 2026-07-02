@@ -69,6 +69,28 @@ describe("generation quality invariants", () => {
     expect(grid.countNonTransparent()).toBeGreaterThan(32 * 32 * 0.2);
   });
 
+  it("barbarian plan is deterministic and skin-dominant with a metal axe", () => {
+    const params = defaultsFor({
+      category: "character",
+      width: 32,
+      height: 32,
+      categoryParams: { plan: "barbarian" },
+    });
+    const a = runPipeline({ seed: "rage", variationIndex: 0, params });
+    const b = runPipeline({ seed: "rage", variationIndex: 0, params });
+    expect(Array.from(a.frames[0]!.data)).toEqual(Array.from(b.frames[0]!.data));
+    const grid = a.frames[0]!;
+    // rampLength 3 working palette: skin @11..13, metal @17..19.
+    let skinPixels = 0;
+    let metalPixels = 0;
+    for (const v of grid.data) {
+      if (v >= 11 && v < 14) skinPixels++;
+      if (v >= 17 && v < 20) metalPixels++;
+    }
+    expect(skinPixels).toBeGreaterThan(grid.countNonTransparent() * 0.25);
+    expect(metalPixels).toBeGreaterThan(0); // the axe head exists
+  });
+
   it("terrain archetype param is honored deterministically", () => {
     const params = defaultsFor({ category: "terrain", categoryParams: { archetype: "water" } });
     const a = runPipeline({ seed: "arch", variationIndex: 1, params });
