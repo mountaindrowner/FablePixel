@@ -1,4 +1,4 @@
-import { ITEM_ARCHETYPES, TERRAIN_ARCHETYPES, type OutlineMode } from "../../engine/index";
+import { CHARACTER_PLAN_IDS, ITEM_ARCHETYPES, TERRAIN_ARCHETYPES, type OutlineMode } from "../../engine/index";
 import { useStore } from "../store";
 
 const OUTLINES: OutlineMode[] = ["none", "black", "selective"];
@@ -7,15 +7,17 @@ export function AdvancedPanel() {
   const params = useStore((s) => s.params);
   const setParam = useStore((s) => s.setParam);
 
-  const archetypes =
+  // Characters force a body plan; items/terrain force an archetype.
+  const archetypeKey = params.category === "character" ? "plan" : "archetype";
+  const archetypes: readonly string[] =
     params.category === "item"
       ? [...ITEM_ARCHETYPES, "blob"]
       : params.category === "terrain"
         ? TERRAIN_ARCHETYPES
-        : null;
+        : CHARACTER_PLAN_IDS;
   const currentArchetype =
-    typeof params.categoryParams?.["archetype"] === "string"
-      ? (params.categoryParams["archetype"] as string)
+    typeof params.categoryParams?.[archetypeKey] === "string"
+      ? (params.categoryParams[archetypeKey] as string)
       : "random";
 
   const autoHue = params.baseHue === "auto";
@@ -33,27 +35,23 @@ export function AdvancedPanel() {
         ))}
       </div>
 
-      {archetypes && (
-        <>
-          <label className="field-label">Archetype</label>
-          <select
-            value={currentArchetype}
-            onChange={(e) =>
-              setParam(
-                "categoryParams",
-                e.target.value === "random" ? undefined : { archetype: e.target.value },
-              )
-            }
-          >
-            <option value="random">random</option>
-            {archetypes.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-        </>
-      )}
+      <label className="field-label">{params.category === "character" ? "Body plan" : "Archetype"}</label>
+      <select
+        value={currentArchetype}
+        onChange={(e) =>
+          setParam(
+            "categoryParams",
+            e.target.value === "random" ? undefined : { [archetypeKey]: e.target.value },
+          )
+        }
+      >
+        <option value="random">random</option>
+        {archetypes.map((a) => (
+          <option key={a} value={a}>
+            {a}
+          </option>
+        ))}
+      </select>
 
       <label className="field-label">
         Density <span className="value">{params.density.toFixed(2)}</span>

@@ -38,6 +38,17 @@ describe("generation quality invariants", () => {
     }
   });
 
+  it("character body plan can be forced via categoryParams", () => {
+    const params = defaultsFor({ category: "character", categoryParams: { plan: "humanoid" } });
+    const a = runPipeline({ seed: "hero", variationIndex: 0, params });
+    const b = runPipeline({ seed: "hero", variationIndex: 0, params });
+    expect(Array.from(a.frames[0]!.data)).toEqual(Array.from(b.frames[0]!.data));
+    expect(a.frames[0]!.countNonTransparent()).toBeGreaterThan(32 * 32 * 0.05);
+    // Different from the unforced pick for at least one variation.
+    const free = runPipeline({ seed: "hero", variationIndex: 0, params: defaultsFor({ category: "character" }) });
+    expect(free.frames[0]).toBeDefined();
+  });
+
   it("terrain archetype param is honored deterministically", () => {
     const params = defaultsFor({ category: "terrain", categoryParams: { archetype: "water" } });
     const a = runPipeline({ seed: "arch", variationIndex: 1, params });

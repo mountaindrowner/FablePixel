@@ -36,4 +36,5 @@ export {
   decodeShare,
 } from "./seed";
 export { ITEM_ARCHETYPES } from "./generators/item/skeletons";
+export { CHARACTER_PLAN_IDS } from "./generators/character/bodyPlans";
 export { archetypeFor, TERRAIN_ARCHETYPES } from "./generators/terrain/terrain";
