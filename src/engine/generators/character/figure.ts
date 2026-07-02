@@ -11,8 +11,63 @@
  */
 
 import { PixelGrid } from "../../core/pixelGrid";
-import { REGION_PALETTE } from "../../core/regions";
+import { REGION, REGION_PALETTE } from "../../core/regions";
 import { fillRoundedRect } from "../../core/draw";
+
+/**
+ * Bone: a tapered limb segment between two joints — the skeleton-first way
+ * artists build figures. Drawn as discs swept along the segment.
+ */
+export interface Bone {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  /** Stroke widths (px) at each end — limbs taper toward the extremity. */
+  w0: number;
+  w1: number;
+  region: number;
+}
+
+function sweep(b: Bone, cb: (x: number, y: number, radius: number) => void): void {
+  const steps = Math.max(1, Math.round(Math.hypot(b.x1 - b.x0, b.y1 - b.y0) * 2));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    cb(b.x0 + (b.x1 - b.x0) * t, b.y0 + (b.y1 - b.y0) * t, (b.w0 + (b.w1 - b.w0) * t) / 2);
+  }
+}
+
+export function drawBone(g: PixelGrid, b: Bone): void {
+  sweep(b, (cx, cy, r) => {
+    for (let y = Math.floor(cy - r); y <= Math.ceil(cy + r); y++) {
+      for (let x = Math.floor(cx - r); x <= Math.ceil(cx + r); x++) {
+        const dx = x - cx;
+        const dy = y - cy;
+        if (dx * dx + dy * dy <= (r + 0.4) * (r + 0.4)) g.set(x, y, b.region);
+      }
+    }
+  });
+}
+
+/**
+ * Interior outline: before drawing a bone over already-drawn body mass, rim
+ * its footprint with DARK — but only where pixels exist. This is the artist's
+ * separation line that keeps an overlapping limb from merging into the torso.
+ */
+export function undercoatBone(g: PixelGrid, b: Bone): void {
+  sweep(b, (cx, cy, r) => {
+    const rr = r + 1;
+    for (let y = Math.floor(cy - rr); y <= Math.ceil(cy + rr); y++) {
+      for (let x = Math.floor(cx - rr); x <= Math.ceil(cx + rr); x++) {
+        const dx = x - cx;
+        const dy = y - cy;
+        if (dx * dx + dy * dy <= (rr + 0.4) * (rr + 0.4) && g.get(x, y) !== REGION.EMPTY) {
+          g.set(x, y, REGION.DARK);
+        }
+      }
+    }
+  });
+}
 
 export type ArmPose = "down" | "raised" | "out";
 
