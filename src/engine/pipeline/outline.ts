@@ -15,7 +15,7 @@ import type { OutlineMode } from "../core/types";
 function darkerMap(ramps: ColorRamps, paletteSize: number): Uint8Array {
   const map = new Uint8Array(paletteSize);
   for (let i = 0; i < paletteSize; i++) map[i] = i;
-  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather]) {
+  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather, ramps.metal]) {
     for (let p = 1; p < ramp.length; p++) {
       map[ramp.start + p] = ramp.start + p - 1;
     }
@@ -26,7 +26,7 @@ function darkerMap(ramps: ColorRamps, paletteSize: number): Uint8Array {
 }
 
 function rampOf(ramps: ColorRamps, idx: number): Ramp | null {
-  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather]) {
+  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather, ramps.metal]) {
     if (idx >= ramp.start && idx < ramp.start + ramp.length) return ramp;
   }
   return null;

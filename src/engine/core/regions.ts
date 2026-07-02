@@ -37,11 +37,16 @@ export const REGION = {
   /** Fixed base tones (no geometric shading), matching *_BASE above. */
   SKIN_BASE: 24,
   LEATHER_BASE: 25,
+  /** Steel/armor ramp. */
+  METAL: 26,
+  METAL_SHADOW: 27,
+  METAL_LIGHT: 28,
+  METAL_BASE: 29,
 } as const;
 
 export type RegionId = (typeof REGION)[keyof typeof REGION];
 
-export type RampName = "body" | "secondary" | "accent" | "skin" | "leather";
+export type RampName = "body" | "secondary" | "accent" | "skin" | "leather" | "metal";
 
 export interface RegionStyle {
   ramp: RampName | "dark" | "light";
@@ -76,6 +81,10 @@ export const REGION_STYLE: Record<number, RegionStyle> = {
   [REGION.LEATHER_LIGHT]: { ramp: "leather", shift: 1, autoShade: false },
   [REGION.SKIN_BASE]: { ramp: "skin", shift: 0, autoShade: false },
   [REGION.LEATHER_BASE]: { ramp: "leather", shift: 0, autoShade: false },
+  [REGION.METAL]: { ramp: "metal", shift: 0, autoShade: true },
+  [REGION.METAL_SHADOW]: { ramp: "metal", shift: -1, autoShade: false },
+  [REGION.METAL_LIGHT]: { ramp: "metal", shift: 1, autoShade: false },
+  [REGION.METAL_BASE]: { ramp: "metal", shift: 0, autoShade: false },
 };
 
 /** Dummy palette for region grids (they hold region ids, not colors). */

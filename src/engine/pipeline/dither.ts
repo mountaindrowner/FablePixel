@@ -13,7 +13,7 @@ const BAYER2 = [
 ];
 
 function rampPosition(ramps: ColorRamps, idx: number): { ramp: Ramp; pos: number } | null {
-  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather]) {
+  for (const ramp of [ramps.body, ramps.secondary, ramps.accent, ramps.skin, ramps.leather, ramps.metal]) {
     if (idx >= ramp.start && idx < ramp.start + ramp.length) {
       return { ramp, pos: idx - ramp.start };
     }

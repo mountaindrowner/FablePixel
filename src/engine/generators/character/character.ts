@@ -4,6 +4,7 @@ import { plansFor } from "./bodyPlans";
 import { buildSilhouette } from "./silhouette";
 import { placeFeatures } from "./features";
 import { drawHero, HERO_DEFAULT_HUE } from "./hero";
+import { drawKnight, KNIGHT_DEFAULT_HUE } from "./knight";
 
 function requestedPlan(params: StageContext["params"]): string | undefined {
   const p = params.categoryParams?.["plan"];
@@ -14,8 +15,11 @@ export const characterGenerator: SpriteGenerator = {
   id: "character",
 
   hueHint(spec) {
-    // A hero defaults to the classic green tunic unless the user set a hue.
-    if (spec.params.categoryParams?.["plan"] === "hero") return HERO_DEFAULT_HUE;
+    // Costume templates default to their classic colors unless a hue is set:
+    // hero → green tunic, knight → heraldic red plume/shield.
+    const plan = spec.params.categoryParams?.["plan"];
+    if (plan === "hero") return HERO_DEFAULT_HUE;
+    if (plan === "knight") return KNIGHT_DEFAULT_HUE;
     return undefined;
   },
 
@@ -25,6 +29,9 @@ export const characterGenerator: SpriteGenerator = {
 
     if (requested === "hero") {
       return drawHero(params.width, params.height, ctx.rng.fork("silhouette"));
+    }
+    if (requested === "knight") {
+      return drawKnight(params.width, params.height, ctx.rng.fork("silhouette"));
     }
 
     const planRng = ctx.rng.fork("plan");

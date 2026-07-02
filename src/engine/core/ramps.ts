@@ -26,6 +26,8 @@ export interface ColorRamps {
   skin: Ramp;
   /** Dark warm browns (boots, hair, wood) — hue ~30, lower lightness range. */
   leather: Ramp;
+  /** Steel grays (armor, blades) — low saturation, wide lightness spread. */
+  metal: Ramp;
 }
 
 /**
@@ -69,6 +71,11 @@ function pickRamp(all: Candidate[], targetHue: number, n: number, lMin = 0.06, l
     // Degenerate palette (GB, grayscale-ish): fall back to pure luminance ordering.
     pool = [...all].filter((c) => c.l > 0.02);
     if (pool.length === 0) pool = [...all];
+  } else if (pool.length > n) {
+    // Keep only the best hue matches before spreading by luminance — otherwise
+    // a wide window lets off-hue colors (browns in a red ramp) become the base.
+    pool.sort((a, b) => hueDistance(a.h, targetHue) - hueDistance(b.h, targetHue));
+    pool = pool.slice(0, Math.max(n, Math.min(pool.length, n * 2)));
   }
   pool.sort((a, b) => a.lum - b.lum);
   if (pool.length <= n) {
@@ -85,6 +92,35 @@ function pickRamp(all: Candidate[], targetHue: number, n: number, lMin = 0.06, l
     ramp.push((pool[idx] as Candidate).color);
   }
   // Deduplicate adjacent picks that collapsed to the same color.
+  for (let i = 1; i < ramp.length; i++) {
+    if (ramp[i] === ramp[i - 1]) {
+      const pos = Math.min(pool.length - 1, Math.round((i / (n - 1)) * (pool.length - 1)) + 1);
+      ramp[i] = (pool[pos] as Candidate).color;
+    }
+  }
+  return ramp;
+}
+
+/**
+ * Steel grays: prefer LOW saturation (which pickRamp filters out on purpose)
+ * across a wide lightness spread, leaning cool. Falls back to a cool-hue
+ * ramp, then pure luminance, for palettes with no grays.
+ */
+function pickMetalRamp(all: Candidate[], n: number): number[] {
+  // Near-neutral grays OR cool desaturated blues — warm tans must not qualify.
+  let pool = all.filter(
+    (c) => c.l > 0.15 && c.l < 0.97 && (c.s < 0.12 || (c.s < 0.4 && c.h >= 170 && c.h <= 280)),
+  );
+  if (pool.length < n) pool = all.filter((c) => c.s < 0.55 && c.l > 0.15 && c.l < 0.97 && c.h > 175 && c.h < 265);
+  if (pool.length < n) return pickRamp(all, 220, n, 0.15, 0.97);
+  pool.sort((a, b) => a.lum - b.lum);
+  // Steel reads bright: drop the darkest third when there's room to spare.
+  if (pool.length > n + 1) pool = pool.slice(Math.floor(pool.length / 3));
+  const ramp: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0.5 : i / (n - 1);
+    ramp.push((pool[Math.round(t * (pool.length - 1))] as Candidate).color);
+  }
   for (let i = 1; i < ramp.length; i++) {
     if (ramp[i] === ramp[i - 1]) {
       const pos = Math.min(pool.length - 1, Math.round((i / (n - 1)) * (pool.length - 1)) + 1);
@@ -118,8 +154,9 @@ export function extractRamps(
   const secondary = pickRamp(all, secondaryHue, rampLength);
   const accent = pickRamp(all, accentHue, rampLength);
   // Fixed-purpose costume ramps: same warm hue, split by lightness.
-  const skin = pickRamp(all, 30, rampLength, 0.45, 0.94);
+  const skin = pickRamp(all, 27, rampLength, 0.5, 0.88);
   const leather = pickRamp(all, 28, rampLength, 0.1, 0.5);
+  const metal = pickMetalRamp(all, rampLength);
 
   // Outline: darkest palette entry.
   let outlineColor = palette.colors[0] as number;
@@ -131,7 +168,7 @@ export function extractRamps(
     }
   }
 
-  const working = new Uint32Array(2 + rampLength * 5);
+  const working = new Uint32Array(2 + rampLength * 6);
   working[0] = 0; // transparent
   working[1] = outlineColor;
   body.forEach((c, i) => (working[2 + i] = c));
@@ -139,6 +176,7 @@ export function extractRamps(
   accent.forEach((c, i) => (working[2 + rampLength * 2 + i] = c));
   skin.forEach((c, i) => (working[2 + rampLength * 3 + i] = c));
   leather.forEach((c, i) => (working[2 + rampLength * 4 + i] = c));
+  metal.forEach((c, i) => (working[2 + rampLength * 5 + i] = c));
 
   return {
     working,
@@ -148,5 +186,6 @@ export function extractRamps(
     accent: { start: 2 + rampLength * 2, length: rampLength },
     skin: { start: 2 + rampLength * 3, length: rampLength },
     leather: { start: 2 + rampLength * 4, length: rampLength },
+    metal: { start: 2 + rampLength * 5, length: rampLength },
   };
 }

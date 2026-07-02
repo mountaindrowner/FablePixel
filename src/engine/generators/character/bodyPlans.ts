@@ -205,7 +205,7 @@ const PLANS: Record<Viewpoint, BodyPlan[]> = {
  * "hero" is a dedicated costume template (see hero.ts), not a rect plan;
  * it is only produced when explicitly requested via categoryParams.plan.
  */
-export const CHARACTER_PLAN_IDS = ["hero", "humanoid", "blob", "quadruped", "winged"] as const;
+export const CHARACTER_PLAN_IDS = ["hero", "knight", "humanoid", "blob", "quadruped", "winged"] as const;
 
 export function plansFor(viewpoint: Viewpoint, complexity: number): BodyPlan[] {
   const eligible = PLANS[viewpoint].filter((p) => p.minComplexity <= complexity);
