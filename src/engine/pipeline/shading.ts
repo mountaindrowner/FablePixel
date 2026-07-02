@@ -13,7 +13,7 @@ import { REGION, REGION_STYLE } from "../core/regions";
 import { rampIndex, type ColorRamps, type Ramp } from "../core/ramps";
 import type { GenerationParams } from "../core/types";
 
-function rampFor(ramps: ColorRamps, name: "body" | "secondary" | "accent"): Ramp {
+function rampFor(ramps: ColorRamps, name: "body" | "secondary" | "accent" | "skin" | "leather"): Ramp {
   return ramps[name];
 }
 

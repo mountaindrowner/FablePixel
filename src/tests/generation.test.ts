@@ -49,6 +49,26 @@ describe("generation quality invariants", () => {
     expect(free.frames[0]).toBeDefined();
   });
 
+  it("hero plan produces a costume with skin, leather, and body pixels", () => {
+    const params = defaultsFor({
+      category: "character",
+      width: 32,
+      height: 32,
+      categoryParams: { plan: "hero" },
+    });
+    const a = runPipeline({ seed: "courage", variationIndex: 0, params });
+    const b = runPipeline({ seed: "courage", variationIndex: 0, params });
+    expect(Array.from(a.frames[0]!.data)).toEqual(Array.from(b.frames[0]!.data));
+    const grid = a.frames[0]!;
+    // rampLength 3 working palette: body @2, skin @11, leather @14.
+    const used = new Set(grid.data);
+    const hasAny = (start: number) => [0, 1, 2].some((i) => used.has(start + i));
+    expect(hasAny(2)).toBe(true); // cap/tunic
+    expect(hasAny(11)).toBe(true); // face/ears/hands
+    expect(hasAny(14)).toBe(true); // hair/boots
+    expect(grid.countNonTransparent()).toBeGreaterThan(32 * 32 * 0.2);
+  });
+
   it("terrain archetype param is honored deterministically", () => {
     const params = defaultsFor({ category: "terrain", categoryParams: { archetype: "water" } });
     const a = runPipeline({ seed: "arch", variationIndex: 1, params });

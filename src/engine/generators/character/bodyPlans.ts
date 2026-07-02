@@ -200,8 +200,12 @@ const PLANS: Record<Viewpoint, BodyPlan[]> = {
   isometric: ISO_PLANS,
 };
 
-/** All plan ids across viewpoints (some viewpoints support a subset). */
-export const CHARACTER_PLAN_IDS = ["humanoid", "blob", "quadruped", "winged"] as const;
+/**
+ * All plan ids across viewpoints (some viewpoints support a subset).
+ * "hero" is a dedicated costume template (see hero.ts), not a rect plan;
+ * it is only produced when explicitly requested via categoryParams.plan.
+ */
+export const CHARACTER_PLAN_IDS = ["hero", "humanoid", "blob", "quadruped", "winged"] as const;
 
 export function plansFor(viewpoint: Viewpoint, complexity: number): BodyPlan[] {
   const eligible = PLANS[viewpoint].filter((p) => p.minComplexity <= complexity);

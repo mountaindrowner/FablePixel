@@ -22,6 +22,10 @@ export interface ColorRamps {
   body: Ramp;
   secondary: Ramp;
   accent: Ramp;
+  /** Warm light tones (faces, hands) — hue ~30, upper lightness range. */
+  skin: Ramp;
+  /** Dark warm browns (boots, hair, wood) — hue ~30, lower lightness range. */
+  leather: Ramp;
 }
 
 /**
@@ -52,12 +56,12 @@ function candidates(palette: Palette): Candidate[] {
 }
 
 /** Pick `n` colors near a target hue, sorted dark → light, spread across luminance. */
-function pickRamp(all: Candidate[], targetHue: number, n: number): number[] {
+function pickRamp(all: Candidate[], targetHue: number, n: number, lMin = 0.06, lMax = 0.96): number[] {
   // Colorful entries within a widening hue window; avoid near-black/near-white ends.
   let pool: Candidate[] = [];
   for (const windowDeg of [25, 45, 70, 100]) {
     pool = all.filter(
-      (c) => c.s > 0.14 && c.l > 0.06 && c.l < 0.96 && hueDistance(c.h, targetHue) <= windowDeg,
+      (c) => c.s > 0.14 && c.l > lMin && c.l < lMax && hueDistance(c.h, targetHue) <= windowDeg,
     );
     if (pool.length >= n) break;
   }
@@ -113,6 +117,9 @@ export function extractRamps(
   const body = pickRamp(all, hue, rampLength);
   const secondary = pickRamp(all, secondaryHue, rampLength);
   const accent = pickRamp(all, accentHue, rampLength);
+  // Fixed-purpose costume ramps: same warm hue, split by lightness.
+  const skin = pickRamp(all, 30, rampLength, 0.45, 0.94);
+  const leather = pickRamp(all, 28, rampLength, 0.1, 0.5);
 
   // Outline: darkest palette entry.
   let outlineColor = palette.colors[0] as number;
@@ -124,12 +131,14 @@ export function extractRamps(
     }
   }
 
-  const working = new Uint32Array(2 + rampLength * 3);
+  const working = new Uint32Array(2 + rampLength * 5);
   working[0] = 0; // transparent
   working[1] = outlineColor;
   body.forEach((c, i) => (working[2 + i] = c));
   secondary.forEach((c, i) => (working[2 + rampLength + i] = c));
   accent.forEach((c, i) => (working[2 + rampLength * 2 + i] = c));
+  skin.forEach((c, i) => (working[2 + rampLength * 3 + i] = c));
+  leather.forEach((c, i) => (working[2 + rampLength * 4 + i] = c));
 
   return {
     working,
@@ -137,5 +146,7 @@ export function extractRamps(
     body: { start: 2, length: rampLength },
     secondary: { start: 2 + rampLength, length: rampLength },
     accent: { start: 2 + rampLength * 2, length: rampLength },
+    skin: { start: 2 + rampLength * 3, length: rampLength },
+    leather: { start: 2 + rampLength * 4, length: rampLength },
   };
 }
